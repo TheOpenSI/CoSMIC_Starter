@@ -70,9 +70,10 @@ DEFAULT_BRANCHES=("Development" "dev" "development")
 
 #  Banner 
 echo ""
-echo -e "${BLUE}${BOLD}╔════════════════════════════════════════════════════╗"
-echo -e "║         CoSMIC Project Launcher                    ║"
-echo -e "╚════════════════════════════════════════════════════╝${NC}"
+echo -e "${BLUE}${BOLD}\
+ ╔════════════════════════════════════════════════════╗\n\
+ ║         CoSMIC Project Launcher                    ║\n\
+ ╚════════════════════════════════════════════════════╝${NC}"
 echo -e "  Base: ${CYAN}$BASE_DIR${NC}"
 echo ""
 
