@@ -44,7 +44,7 @@ ask_choice() {
   done
 }
 
-# ── Docker compose detection ───────────────────────────────────────────────────
+#  Docker compose detection 
 if docker compose version &>/dev/null; then
   DC="docker compose"
 elif command -v docker-compose &>/dev/null; then
@@ -54,7 +54,7 @@ else
   exit 1
 fi
 
-# ── Paths ──────────────────────────────────────────────────────────────────────
+#  Paths 
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DB_DIR="$BASE_DIR/CoSMIC_DB"
 COSMIC_DIR="$BASE_DIR/CoSMIC"
@@ -68,7 +68,7 @@ REPO_URLS=(
 )
 DEFAULT_BRANCHES=("Development" "dev" "development")
 
-# ── Banner ─────────────────────────────────────────────────────────────────────
+#  Banner 
 echo ""
 echo -e "${BLUE}${BOLD}╔════════════════════════════════════════════════════╗"
 echo -e "║         CoSMIC Project Launcher                    ║"
@@ -76,7 +76,7 @@ echo -e "╚══════════════════════�
 echo -e "  Base: ${CYAN}$BASE_DIR${NC}"
 echo ""
 
-# ── Main menu ──────────────────────────────────────────────────────────────────
+#  Main menu 
 MENU=$(ask_choice "What would you like to do?" "1" \
   "Start  — pull repos, checkout branch, bring up all stacks" \
   "Stop   — bring down all stacks" \
@@ -103,7 +103,7 @@ if [[ "$MENU" == "3" ]]; then
   exit 0
 fi
 
-# ── Step 1: Clone repos ────────────────────────────────────────────────────────
+#  Step 1: Clone repos 
 header "Step 1 — Repositories"
 for i in "${!REPOS[@]}"; do
   repo_path="$BASE_DIR/${REPOS[$i]}"
@@ -115,14 +115,14 @@ for i in "${!REPOS[@]}"; do
   fi
 done
 
-# ── Step 2: Branch selection ───────────────────────────────────────────────────
+#  Step 2: Branch selection 
 header "Step 2 — Branch Selection"
 BRANCHES=()
 for i in "${!REPOS[@]}"; do
   BRANCHES+=("$(ask_input "Branch for ${REPOS[$i]}" "${DEFAULT_BRANCHES[$i]}")")
 done
 
-# ── Step 3: Checkout & pull ────────────────────────────────────────────────────
+#  Step 3: Checkout & pull 
 header "Step 3 — Checkout & Pull"
 for i in "${!REPOS[@]}"; do
   repo="${REPOS[$i]}"
@@ -144,7 +144,7 @@ for i in "${!REPOS[@]}"; do
   fi
 done
 
-# ── Step 4: Docker options ─────────────────────────────────────────────────────
+#  Step 4: Docker options 
 header "Step 4 — Docker Options"
 BUILD_FLAG=""; PULL_FLAG=""
 ask_yn "Pull latest images (--pull always)?" "n" && PULL_FLAG="--pull always"
@@ -153,7 +153,7 @@ if ask_yn "docker system prune -af --volumes? ${RED}Removes ALL unused data.${NC
   docker system prune -af --volumes
 fi
 
-# ── Step 5: CoSMIC_DB config ───────────────────────────────────────────────────
+#  Step 5: CoSMIC_DB config 
 header "Step 5 — CoSMIC_DB Config"
 mkdir -p "$DB_DIR/docker/secrets" "$DB_DIR/docker/configs" "$DB_DIR/cores"
 for src in "$DB_DIR/examples/"*; do
@@ -174,7 +174,7 @@ for src in "$DB_DIR/examples/"*; do
   fi
 done
 
-# ── Step 6: CoSMIC .env ───────────────────────────────────────────────────────
+#  Step 6: CoSMIC .env 
 header "Step 6 — CoSMIC Config"
 if [[ -f "$COSMIC_DIR/.env" ]]; then
   success "CoSMIC .env already exists."
@@ -184,7 +184,7 @@ else
   success "CoSMIC .env created."
 fi
 
-# ── Step 7: CoSMIC_UI .env ────────────────────────────────────────────────────
+#  Step 7: CoSMIC_UI .env 
 header "Step 7 — CoSMIC_UI Config"
 if [[ -f "$UI_DIR/.env" ]]; then
   success "CoSMIC_UI .env already exists."
@@ -193,7 +193,7 @@ else
   success "CoSMIC_UI .env created from .env_example."
 fi
 
-# ── Step 8: Start CoSMIC_DB ────────────────────────────────────────────────────
+#  Step 8: Start CoSMIC_DB 
 header "Step 8 — CoSMIC_DB"
 $DC -f "$DB_DIR/compose.yaml" up -d $BUILD_FLAG || { error "CoSMIC_DB failed to start"; exit 1; }
 
@@ -204,17 +204,17 @@ for (( i=0; i<30; i++ )); do
 done
 echo ""; success "Postgres ready."
 
-# ── Step 7: Start CoSMIC ──────────────────────────────────────────────────────
+#  Step 7: Start CoSMIC 
 header "Step 9 — CoSMIC"
 $DC -f "$COSMIC_DIR/compose.yaml" up -d $BUILD_FLAG $PULL_FLAG || { error "CoSMIC failed to start"; exit 1; }
 success "CoSMIC is up."
 
-# ── Step 8: Start CoSMIC_UI ───────────────────────────────────────────────────
+#  Step 8: Start CoSMIC_UI 
 header "Step 10 — CoSMIC_UI"
 $DC -f "$UI_DIR/compose.yaml" up -d $BUILD_FLAG || { error "CoSMIC_UI failed to start"; exit 1; }
 success "CoSMIC_UI is up."
 
-# ── Done ───────────────────────────────────────────────────────────────────────
+#  Done 
 header "All services started!"
 echo -e "  ${GREEN}CoSMIC API${NC}      →  http://localhost:3000"
 echo -e "  ${GREEN}CoSMIC UI${NC}       →  http://localhost:5173"
