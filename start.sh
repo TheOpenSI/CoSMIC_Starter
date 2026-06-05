@@ -18,22 +18,15 @@ header()  { divider; echo -e "${BLUE}${BOLD}  $*${NC}"; divider; }
 # ── Detect docker compose command ─────────────────────────────────────────────
 DC=""
 if docker compose version &>/dev/null; then
-  # Verify the plugin actually supports -f (some Ubuntu packages ship a broken stub)
-  if docker compose -f /dev/null config &>/dev/null 2>&1 || \
-     docker compose --help 2>&1 | grep -q '\-f,'; then
-    DC="docker compose"
-  fi
+  DC="docker compose"
+elif command -v docker-compose &>/dev/null; then
+  DC="docker-compose"
+else
+  echo -e "${RED}${BOLD}[✗]${NC} No compose command found. Install the plugin:" >&2
+  echo -e "    sudo apt-get install docker-compose-plugin" >&2
+  exit 1
 fi
-if [[ -z "$DC" ]]; then
-  if command -v docker-compose &>/dev/null; then
-    DC="docker-compose"
-  else
-    echo -e "${RED}${BOLD}[✗]${NC} Neither 'docker compose' (plugin) nor 'docker-compose' (v1) found." >&2
-    echo -e "    Install the compose plugin:  sudo apt-get install docker-compose-plugin" >&2
-    exit 1
-  fi
-fi
-success "Using compose command: $DC  ($(${DC} version --short 2>/dev/null || ${DC} version 2>/dev/null | head -1))"
+success "Using: $DC  ($(${DC} version 2>/dev/null | head -1))"
 
 ask_yn() {
   local prompt="$1" default="${2:-y}" yn_label answer
@@ -224,8 +217,39 @@ else
   success "External volume 'shared_mount' already exists."
 fi
 
-#  Step 6: Start CoSMIC_DB 
-header "Step 6 — CoSMIC_DB (Database layer)"
+#  Step 6: CoSMIC_DB config setup
+header "Step 6 — CoSMIC_DB Config Setup"
+
+DB_DIR="$BASE_DIR/CoSMIC_DB"
+EXAMPLES_DIR="$DB_DIR/examples"
+
+mkdir -p "$DB_DIR/docker/secrets" "$DB_DIR/docker/configs" "$DB_DIR/cores"
+
+# Map: source example file → destination (relative to CoSMIC_DB)
+declare -A EXAMPLE_MAP=(
+  ["postgres_usr.example.txt"]="docker/secrets/postgres_usr.txt"
+  ["postgres_db.example.txt"]="docker/secrets/postgres_db.txt"
+  ["postgres_pwd.example.txt"]="docker/secrets/postgres_pwd.txt"
+  ["pgadmin_pwd.example.txt"]="docker/secrets/pgadmin_pwd.txt"
+  ["pgadmin_svr.example.json"]="docker/configs/pgadmin_svr.json"
+  ["cosmic_cfg.example.env"]="cores/cosmic_cfg.env"
+)
+
+for example in "${!EXAMPLE_MAP[@]}"; do
+  src="$EXAMPLES_DIR/$example"
+  dest="$DB_DIR/${EXAMPLE_MAP[$example]}"
+  if [[ -f "$dest" ]]; then
+    success "Already exists: ${EXAMPLE_MAP[$example]}"
+  else
+    cp "$src" "$dest"
+    success "Copied: $example → ${EXAMPLE_MAP[$example]}"
+  fi
+done
+
+warn "Default demo credentials in use. Edit files in CoSMIC_DB/docker/secrets/ to change them."
+
+#  Step 7: Start CoSMIC_DB
+header "Step 7 — CoSMIC_DB (Database layer)"
 
 info "Starting database service first..."
 $DC -f "$COSMIC_DB_COMPOSE" up -d $BUILD_FLAG database
@@ -248,15 +272,15 @@ info "Starting remaining CoSMIC_DB services (backend + pgadmin)..."
 $DC -f "$COSMIC_DB_COMPOSE" up -d $BUILD_FLAG
 success "CoSMIC_DB stack is up."
 
-#  Step 7: Start CoSMIC 
-header "Step 7 — CoSMIC (Main stack)"
+#  Step 8: Start CoSMIC
+header "Step 8 — CoSMIC (Main stack)"
 
 info "Starting CoSMIC stack (ollama, cosmic, open-webui, pipelines, pycapsule)..."
 $DC -f "$COSMIC_COMPOSE" up -d $BUILD_FLAG $PULL_FLAG
 success "CoSMIC stack is up."
 
-#  Step 8: Start CoSMIC_UI 
-header "Step 8 — CoSMIC_UI (Frontend)"
+#  Step 9: Start CoSMIC_UI
+header "Step 9 — CoSMIC_UI (Frontend)"
 
 info "Starting CoSMIC_UI dev server..."
 $DC -f "$COSMIC_UI_COMPOSE" up -d $BUILD_FLAG
@@ -275,3 +299,4 @@ if ask_yn "Tail CoSMIC logs now? (Ctrl+C to stop)" "y"; then
   info "Tailing cosmic container logs..."
   $DC -f "$COSMIC_COMPOSE" logs -f cosmic
 fi
+
