@@ -151,7 +151,8 @@ BUILD_FLAG=""; PULL_FLAG=""
 ask_yn "Pull latest images (--pull always)?" "n" && PULL_FLAG="--pull always"
 ask_yn "Build images from source (--build)?" "n"  && BUILD_FLAG="--build"
 if ask_yn "docker system prune -af --volumes? ${RED}Removes ALL unused data.${NC}" "n"; then
-  docker system prune -af --volumes
+	docker container prune -f
+	docker system prune -af --volumes
 fi
 
 #  Step 5: CoSMIC_DB config 
