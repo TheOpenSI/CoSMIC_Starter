@@ -153,6 +153,7 @@ ask_yn "Build images from source (--build)?" "n"  && BUILD_FLAG="--build"
 if ask_yn "docker system prune -af --volumes? ${RED}Removes ALL unused data.${NC}" "n"; then
 	docker container prune -f
 	docker system prune -af --volumes
+  docker volume rm $(docker volume ls -q)
 fi
 
 #  Step 5: CoSMIC_DB config 
