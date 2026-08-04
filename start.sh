@@ -77,11 +77,12 @@ echo -e "${BLUE}${BOLD}\
 echo -e "  Base: ${CYAN}$BASE_DIR${NC}"
 echo ""
 
-#  Main menu 
+#  Main menu
 MENU=$(ask_choice "What would you like to do?" "1" \
-  "Start  — pull repos, checkout branch, bring up all stacks" \
-  "Stop   — bring down all stacks" \
-  "Logs   — tail logs for a specific service")
+  "Start   — pull repos, checkout branch, bring up all stacks" \
+  "Stop    — bring down all stacks" \
+  "Logs    — tail logs for a specific service" \
+  "Prepare — pull repos, checkout branch, create config files (no Docker)")
 
 if [[ "$MENU" == "2" ]]; then
   header "Stopping all stacks"
@@ -104,7 +105,10 @@ if [[ "$MENU" == "3" ]]; then
   exit 0
 fi
 
-#  Step 1: Clone repos 
+PREPARE_ONLY=false
+[[ "$MENU" == "4" ]] && PREPARE_ONLY=true
+
+#  Step 1: Clone repos
 header "Step 1 — Repositories"
 for i in "${!REPOS[@]}"; do
   repo_path="$BASE_DIR/${REPOS[$i]}"
@@ -145,15 +149,17 @@ for i in "${!REPOS[@]}"; do
   fi
 done
 
-#  Step 4: Docker options 
-header "Step 4 — Docker Options"
+#  Step 4: Docker options
 BUILD_FLAG=""; PULL_FLAG=""
-ask_yn "Pull latest images (--pull always)?" "n" && PULL_FLAG="--pull always"
-ask_yn "Build images from source (--build)?" "n"  && BUILD_FLAG="--build"
-if ask_yn "docker system prune -af --volumes? ${RED}Removes ALL unused data.${NC}" "n"; then
-	docker container prune -f
-	docker system prune -af --volumes
-  docker volume rm $(docker volume ls -q)
+if ! $PREPARE_ONLY; then
+  header "Step 4 — Docker Options"
+  ask_yn "Pull latest images (--pull always)?" "n" && PULL_FLAG="--pull always"
+  ask_yn "Build images from source (--build)?" "n"  && BUILD_FLAG="--build"
+  if ask_yn "docker system prune -af --volumes? ${RED}Removes ALL unused data.${NC}" "n"; then
+    docker container prune -f
+    docker system prune -af --volumes
+    docker volume rm $(docker volume ls -q)
+  fi
 fi
 
 #  Step 5: CoSMIC_DB config 
@@ -196,7 +202,14 @@ else
   success "CoSMIC_UI .env created from .env_example."
 fi
 
-#  Step 8: Start CoSMIC_DB 
+if $PREPARE_ONLY; then
+  header "Repo prepared"
+  success "All repos cloned, branches checked out, and config files created."
+  info "Run this script again and choose Start when you're ready to bring up the stacks."
+  exit 0
+fi
+
+#  Step 8: Start CoSMIC_DB
 header "Step 8 — CoSMIC_DB"
 $DC -f "$DB_DIR/compose.yaml" up -d $BUILD_FLAG || { error "CoSMIC_DB failed to start"; exit 1; }
 
