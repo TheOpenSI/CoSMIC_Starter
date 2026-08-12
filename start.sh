@@ -162,26 +162,14 @@ if ! $PREPARE_ONLY; then
   fi
 fi
 
-#  Step 5: CoSMIC_DB config 
+#  Step 5: CoSMIC_DB config
 header "Step 5 — CoSMIC_DB Config"
-mkdir -p "$DB_DIR/docker/secrets" "$DB_DIR/docker/configs" "$DB_DIR/cores"
-for src in "$DB_DIR/examples/"*; do
-  filename="$(basename "$src")"
-  # strip .example from name, route to correct subfolder
-  case "$filename" in
-    postgres_*.example.txt) dest="$DB_DIR/docker/secrets/${filename//.example/}" ;;
-    pgadmin_*.example.txt)  dest="$DB_DIR/docker/secrets/${filename//.example/}" ;;
-    pgadmin_*.example.json) dest="$DB_DIR/docker/configs/${filename//.example/}"  ;;
-    cosmic_*.example.env)   dest="$DB_DIR/cores/${filename//.example/}"           ;;
-    *) continue ;;
-  esac
-  if [[ -f "$dest" ]]; then
-    success "Already exists: $(basename "$dest")"
-  else
-    cp "$src" "$dest"
-    success "Copied → $(basename "$dest")"
-  fi
-done
+if [[ -f "$DB_DIR/bins/setup.sh" ]]; then
+  ( cd "$DB_DIR" && bash bins/setup.sh )
+else
+  error "CoSMIC_DB/bins/setup.sh not found — repo layout may have changed."
+  exit 1
+fi
 
 #  Step 6: CoSMIC .env 
 header "Step 6 — CoSMIC Config"
