@@ -156,20 +156,10 @@ done
 
 #  Step 3: Config files
 header "Step 3 — CoSMIC Config"
-if [[ -f "$COSMIC_DIR/.env" ]]; then
-  success "CoSMIC .env already exists."
-else
-  cp "$COSMIC_DIR/.env.example" "$COSMIC_DIR/.env"
-  success "CoSMIC .env created from .env.example."
-fi
+cp "$COSMIC_DIR/.env.example" "$COSMIC_DIR/.env"
 
 header "Step 4 — CoSMIC_UI Config"
-if [[ -f "$UI_DIR/.env" ]]; then
-  success "CoSMIC_UI .env already exists."
-else
-  cp "$UI_DIR/.env_example" "$UI_DIR/.env"
-  success "CoSMIC_UI .env created from .env_example."
-fi
+cp "$UI_DIR/.env_example" "$UI_DIR/.env"
 
 header "Step 5 — CoSMIC_DB Config"
 if [[ -f "$DB_DIR/bins/setup.sh" ]]; then
