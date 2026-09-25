@@ -69,6 +69,7 @@ REPO_URLS=(
   "https://github.com/TheOpenSI/CoSMIC_UI.git"
 )
 REPO_DIRS=("$COSMIC_DIR" "$DB_DIR" "$UI_DIR")
+DEFAULT_BRANCHES=("Development" "dev" "development")
 
 docker_cleanup() {
   header "Docker Cleanup"
@@ -107,17 +108,49 @@ echo -e "  Base: ${CYAN}$BASE_DIR${NC}"
 #  Step 1: Docker cleanup
 docker_cleanup
 
-#  Step 2: Update repositories (whatever branch is on disk)
+#  Step 2: Update repositories
 header "Step 2 — Update Repositories"
+
+CHANGE_BRANCH=false
+if ask_yn "Change branches, or run as-is (already set up)?" "n"; then
+  CHANGE_BRANCH=true
+fi
+
+BRANCHES=()
+if $CHANGE_BRANCH; then
+  for i in "${!REPOS[@]}"; do
+    BRANCHES+=("$(ask_input "Branch for ${REPOS[$i]}" "${DEFAULT_BRANCHES[$i]}")")
+  done
+fi
+
 for i in "${!REPOS[@]}"; do
   repo="${REPOS[$i]}"
   repo_path="${REPO_DIRS[$i]}"
-  if [[ -d "$repo_path/.git" ]]; then
-    info "Pulling $repo..."
-    git -C "$repo_path" pull || warn "$repo: pull failed (check for local changes)"
-  else
+
+  if [[ ! -d "$repo_path/.git" ]]; then
     info "Cloning $repo..."
     git clone "${REPO_URLS[$i]}" "$repo_path"
+    continue
+  fi
+
+  if $CHANGE_BRANCH; then
+    branch="${BRANCHES[$i]}"
+    git -C "$repo_path" fetch --all --prune
+
+    if git -C "$repo_path" checkout "$branch" 2>/dev/null; then
+      git -C "$repo_path" branch --set-upstream-to="origin/$branch" "$branch" 2>/dev/null || true
+    else
+      git -C "$repo_path" checkout -b "$branch" --track "origin/$branch"
+    fi
+
+    if git -C "$repo_path" pull --ff-only origin "$branch" 2>/dev/null; then
+      success "$repo → $branch"
+    else
+      warn "$repo → $branch (could not fast-forward)"
+    fi
+  else
+    info "Pulling $repo..."
+    git -C "$repo_path" pull || warn "$repo: pull failed (check for local changes)"
   fi
 done
 
