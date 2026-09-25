@@ -5,7 +5,7 @@ update_repos() {
   header "Update Repositories"
 
   local change_branch=false
-  if ask_yn "Change branches, or run as-is (already set up)?" "n"; then
+  if ask_yn "Change branches?" "n"; then
     change_branch=true
   fi
 
