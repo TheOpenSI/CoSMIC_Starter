@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
-# Clone/pull the three repos, optionally switching branches.
+
+branch_exists_locally() {
+  local repo_path="$1"
+  local branch="$2"
+
+  git -C "$repo_path" show-ref --verify --quiet "refs/heads/$branch"
+}
+
 
 update_repos() {
   header "Update Repositories"
@@ -23,28 +30,22 @@ update_repos() {
 
     if [[ ! -d "$repo_path/.git" ]]; then
       info "Cloning $repo..."
-      git clone "${REPO_URLS[$i]}" "$repo_path"
-      continue
+      git clone "${REPO_URLS[$i]}" "$repo_path" || return 1
+      # continue
     fi
 
     if $change_branch; then
+      info "Checking out branch for $repo..."
       branch="${branches[$i]}"
-      git -C "$repo_path" fetch --all --prune
-
-      if git -C "$repo_path" checkout "$branch" 2>/dev/null; then
-        git -C "$repo_path" branch --set-upstream-to="origin/$branch" "$branch" 2>/dev/null || true
+      if branch_exists_locally "$repo_path" "$branch"; then
+        # info "Switching $repo to branch $branch..."
+        git -C "$repo_path" checkout "$branch" || return 1
+        git -C "$repo_path" pull --ff-only origin "$branch" || return 1
       else
-        git -C "$repo_path" checkout -b "$branch" --track "origin/$branch"
+        # info "Branch $branch does not exist locally for $repo.  Attempting to create it from origin/$branch..."
+        git -C "$repo_path" fetch --all || return 1
+        git -C "$repo_path" checkout -b "$branch" "origin/$branch" || return 1
       fi
-
-      if git -C "$repo_path" pull --ff-only origin "$branch" 2>/dev/null; then
-        success "$repo → $branch"
-      else
-        warn "$repo → $branch (could not fast-forward)"
-      fi
-    else
-      info "Pulling $repo..."
-      git -C "$repo_path" pull || warn "$repo: pull failed (check for local changes)"
     fi
   done
 }
