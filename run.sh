@@ -36,7 +36,7 @@ case "$MENU" in
     setup_config
     docker_cleanup
     start_stack
-    port_forward
+    # port_forward
     ask_yn "Tail logs now? (Ctrl+C to stop)" "n" && tail_logs
     ;;
   2)
