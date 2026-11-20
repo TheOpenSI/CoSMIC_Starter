@@ -16,6 +16,9 @@ start_stack() {
   $DC -f "$COSMIC_DIR/compose.yaml" up -d --build || { error "CoSMIC (ollama + qdrant + cosmic) failed to start"; exit 1; }
   success "CoSMIC (+ Ollama + Qdrant) is up."
 
+  $DC -f "$AUTH_DIR/compose.yaml" up -d --build || { error "CoSMIC_AUTH failed to start"; exit 1; }
+  success "CoSMIC_AUTH is up."
+
   $DC -f "$UI_DIR/compose.yaml" up -d --build || { error "CoSMIC_UI failed to start"; exit 1; }
   success "CoSMIC_UI is up."
 }
