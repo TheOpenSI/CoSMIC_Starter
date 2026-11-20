@@ -58,12 +58,14 @@ fi
 DB_DIR="$BASE_DIR/CoSMIC_DB"
 COSMIC_DIR="$BASE_DIR/CoSMIC"
 UI_DIR="$BASE_DIR/CoSMIC_UI"
+AUTH_DIR="$BASE_DIR/cosmic-auth"
 
-REPOS=("CoSMIC" "CoSMIC_DB" "CoSMIC_UI")
+REPOS=("cosmic-core" "cosmic-db" "cosmic-platform" "cosmic-auth")
 REPO_URLS=(
   "https://github.com/TheOpenSI/CoSMIC.git"
   "https://github.com/TheOpenSI/CoSMIC_DB.git"
   "https://github.com/TheOpenSI/CoSMIC_UI.git"
+  "https://github.com/TheOpenSI/cosmic-auth.git"
 )
-REPO_DIRS=("$COSMIC_DIR" "$DB_DIR" "$UI_DIR")
-DEFAULT_BRANCHES=("Development" "dev" "development")
+REPO_DIRS=("$COSMIC_DIR" "$DB_DIR" "$UI_DIR" "$AUTH_DIR")
+DEFAULT_BRANCHES=("Development" "dev" "development" "dev")
