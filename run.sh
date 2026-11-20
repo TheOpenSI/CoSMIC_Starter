@@ -32,7 +32,7 @@ MENU=$(ask_choice "What would you like to do?" "1" \
 
 case "$MENU" in
   1)
-    update_repos
+    update_repos || exit 1
     setup_config
     docker_cleanup
     start_stack
@@ -49,7 +49,7 @@ case "$MENU" in
     tail_logs
     ;;
   5)
-    update_repos
+    update_repos || exit 1
     setup_config
     success "Repos updated and config files created."
     info "Run this script again and choose Start when you're ready to bring up the stacks."
