@@ -11,14 +11,15 @@ start_stack() {
     docker exec cosmic-postgres pg_isready -q 2>/dev/null && break
     echo -n "."; sleep 3
   done
-  echo ""; success "Postgres ready."
+  echo ""; 
+  success "cosmic-db is up and Postgres ready."
 
-  $DC -f "$COSMIC_DIR/compose.yaml" up -d --build || { error "CoSMIC (ollama + qdrant + cosmic) failed to start"; exit 1; }
-  success "CoSMIC (+ Ollama + Qdrant) is up."
+  $DC -f "$COSMIC_DIR/compose.yaml" up -d --build || { error "cosmic-core (ollama + qdrant + cosmic) failed to start"; exit 1; }
+  success "cosmic-core (+ Ollama + Qdrant) is up."
 
-  $DC -f "$AUTH_DIR/compose.yaml" up -d --build || { error "CoSMIC_AUTH failed to start"; exit 1; }
-  success "CoSMIC_AUTH is up."
+  $DC -f "$AUTH_DIR/compose.yaml" up -d --build || { error "cosmic-auth failed to start"; exit 1; }
+  success "cosmic-auth is up."
 
-  $DC -f "$UI_DIR/compose.yaml" up -d --build || { error "CoSMIC_UI failed to start"; exit 1; }
-  success "CoSMIC_UI is up."
+  $DC -f "$UI_DIR/compose.yaml" up -d --build || { error "cosmic-platform (UI) failed to start"; exit 1; }
+  success "cosmic-platform (UI) is up."
 }
