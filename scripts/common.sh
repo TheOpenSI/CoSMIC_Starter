@@ -55,9 +55,9 @@ else
 fi
 
 #  Paths
-DB_DIR="$BASE_DIR/CoSMIC_DB"
-COSMIC_DIR="$BASE_DIR/CoSMIC"
-UI_DIR="$BASE_DIR/CoSMIC_UI"
+DB_DIR="$BASE_DIR/cosmic-db"
+COSMIC_DIR="$BASE_DIR/cosmic-core"
+UI_DIR="$BASE_DIR/cosmic-platform"
 AUTH_DIR="$BASE_DIR/cosmic-auth"
 
 REPOS=("cosmic-core" "cosmic-db" "cosmic-platform" "cosmic-auth")
